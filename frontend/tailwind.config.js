@@ -6,6 +6,8 @@ module.exports = {
             colors: {
                 primary_blue: "#5068E2",
                 secondary_blue: "#70A0E9",
+                light_grey: "#8C8D8BFF",
+                dark_grey: "#242524FF",
             },
             fontFamily: {
                 body: ["var(--font-roboto)", "sans-serif"],

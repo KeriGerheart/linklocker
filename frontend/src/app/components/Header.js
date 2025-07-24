@@ -3,30 +3,26 @@
 import { useState } from "react";
 import { Dialog, DialogPanel } from "@headlessui/react";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
+import Image from "next/image";
+import Link from "next/link";
 
 const navigation = [
-    { name: "Product", href: "#" },
-    { name: "Features", href: "#" },
-    { name: "Marketplace", href: "#" },
-    { name: "Company", href: "#" },
+    { name: "Home", href: "#" },
+    { name: "Dashboard", href: "#" },
+    { name: "Create Locker", href: "#" },
 ];
 
 export default function Example() {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     return (
-        <header className="bg-white">
-            <nav aria-label="Global" className="mx-auto flex max-w-7xl items-center justify-between p-6 lg:px-8">
-                <div className="flex lg:flex-1">
-                    <a href="#" className="-m-1.5 p-1.5">
-                        <span className="sr-only">Your Company</span>
-                        <img
-                            alt=""
-                            src="https://tailwindcss.com/plus-assets/img/logos/mark.svg?color=indigo&shade=600"
-                            className="h-8 w-auto"
-                        />
-                    </a>
-                </div>
+        <header className="bg-white font-body">
+            <nav aria-label="Global" className="mx-auto flex max-w-7xl items-center justify-between p-6 gap-8 lg:px-8">
+                <Link href="/" className="flex items-end -translate-y-1">
+                    <Image src="/linklocker.svg" alt="LinkLocker Logo" width={40} height={40} />
+                    <span className="text-lg text-dark_grey font-semibold">LinkLocker</span>
+                </Link>
+
                 <div className="flex lg:hidden">
                     <button
                         type="button"
@@ -38,15 +34,13 @@ export default function Example() {
                 </div>
                 <div className="hidden lg:flex lg:gap-x-12">
                     {navigation.map((item) => (
-                        <a key={item.name} href={item.href} className="text-sm/6 font-semibold text-gray-900">
+                        <a
+                            key={item.name}
+                            href={item.href}
+                            className="text-sm/6 font-semibold text-dark_grey hover:text-primary_blue transition-colors duration-200">
                             {item.name}
                         </a>
                     ))}
-                </div>
-                <div className="hidden lg:flex lg:flex-1 lg:justify-end">
-                    <a href="#" className="text-sm/6 font-semibold text-gray-900">
-                        Log in <span aria-hidden="true">&rarr;</span>
-                    </a>
                 </div>
             </nav>
             <Dialog open={mobileMenuOpen} onClose={setMobileMenuOpen} className="lg:hidden">
@@ -80,13 +74,6 @@ export default function Example() {
                                         {item.name}
                                     </a>
                                 ))}
-                            </div>
-                            <div className="py-6">
-                                <a
-                                    href="#"
-                                    className="-mx-3 block rounded-lg px-3 py-2.5 text-base/7 font-semibold text-gray-900 hover:bg-gray-50">
-                                    Log in
-                                </a>
                             </div>
                         </div>
                     </div>
