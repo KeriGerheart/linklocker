@@ -17,8 +17,10 @@ export default function Header() {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     return (
-        <header className="bg-white font-body">
-            <nav aria-label="Global" className="mx-auto flex max-w-7xl items-center justify-between p-6 gap-8 md:px-8">
+        <header className="bg-white font-body shadow-md">
+            <nav
+                aria-label="Global"
+                className="mx-auto flex items-center justify-between py-6 gap-8 px-4 sm:px-8 lg:px-16 xl:px-20 2xl:px-24">
                 <Link href="/" className="flex items-end -translate-y-1">
                     <Image src="/linklocker.svg" alt="LinkLocker Logo" width={40} height={40} />
                     <span className="text-lg text-dark_grey font-semibold">LinkLocker</span>
