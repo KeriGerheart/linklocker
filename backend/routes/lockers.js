@@ -49,6 +49,20 @@ router.post("/", async (req, res) => {
     }
 });
 
+//get all lockers for a specific user
+
+router.get("/", async (req, res) => {
+    try {
+        const { ownerId } = req.query;
+        if (!ownerId) return res.status(400).json({ error: "Missing ownerId" });
+
+        const lockers = await Locker.find({ ownerId }).sort({ createdAt: -1 });
+        res.json(lockers);
+    } catch (error) {
+        res.status(500).json({ error: "Server Error" });
+    }
+});
+
 //retrieve locker details
 router.get("/:shortCode", async (req, res) => {
     try {
