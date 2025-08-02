@@ -117,6 +117,19 @@ router.put("/:shortCode", async (req, res) => {
     }
 });
 
+//delete locker
+router.delete("/:shortCode", async (req, res) => {
+    try {
+        const result = await Locker.findOneAndDelete({ shortCode: req.params.shortCode });
+        if (!result) {
+            return res.status(404).json({ error: "Locker not found" });
+        }
+        res.json({ message: "Locker deleted" });
+    } catch (error) {
+        res.status(500).json({ error: "Server Error" });
+    }
+});
+
 //validate password for locker and return link from locker
 router.post("/:shortCode/unlock", async (req, res) => {
     try {
