@@ -49,4 +49,28 @@ router.post("/", async (req, res) => {
     }
 });
 
+//retrieve locker details
+router.get("/:shortcode", async (req, res) => {
+    try {
+        const locker = await Locker.findOne({ shortCode: req.params.shortCode });
+
+        if (!locker) {
+            return res.status(404).json({ error: "Locker not found" });
+        }
+
+        if (new Date() > locker.expirationDate) {
+            return res.status(410).json({ error: "Link Expired" });
+        }
+
+        res.json({
+            title: locker.title,
+            requiresPassword: !!locker.passwordHash,
+            expirationDate: locker.expirationDate,
+            views: locker.views,
+        });
+    } catch (error) {
+        res.json(500).json({ error: "Server Error" });
+    }
+});
+
 module.exports = router;
