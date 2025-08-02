@@ -74,7 +74,7 @@ router.get("/:shortCode", async (req, res) => {
 });
 
 //validate password for locker and return link from locker
-router.post(".shortCode/unlock", async (req, res) => {
+router.post("/:shortCode/unlock", async (req, res) => {
     try {
         const { password } = req.body;
         const locker = await Locker.findOne({ shortCode: req.params.shortCode });
@@ -87,6 +87,11 @@ router.post(".shortCode/unlock", async (req, res) => {
             return res.status(410).json({ error: "Link Expired" });
         }
 
+        if (!locker.passwordHash) {
+            return res.json({ destinationUrl: locker.destinationUrl });
+        }
+
+        const match = await bcrypt.compare(password, locker.passwordHash);
         if (!match) {
             return res.status(401).json({ error: "Invalid password" });
         }
