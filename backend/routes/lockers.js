@@ -130,8 +130,8 @@ router.delete("/:shortCode", async (req, res) => {
     }
 });
 
-//validate password for locker and return link from locker
-router.post("/:shortCode/unlock", async (req, res) => {
+//validate password (if required) for locker and return link from locker
+router.post("/view/:shortCode/unlock", async (req, res) => {
     try {
         const { password } = req.body;
         const locker = await Locker.findOne({ shortCode: req.params.shortCode });
@@ -145,6 +145,8 @@ router.post("/:shortCode/unlock", async (req, res) => {
         }
 
         if (!locker.passwordHash) {
+            locker.views += 1;
+            await locker.save();
             return res.json({ destinationUrl: locker.destinationUrl });
         }
 
@@ -158,8 +160,31 @@ router.post("/:shortCode/unlock", async (req, res) => {
 
         res.json({ destinationUrl: locker.destinationUrl });
     } catch (error) {
-        res.status(500).json({ error: "Server error" });
+        res.status(500).json({ error: "Server Error" });
     }
 });
 
+//retrieve locker details for public view
+router.get("/view/:shortCode", async (req, res) => {
+    try {
+        const locker = await Locker.findOne({ shortCode: req.params.shortCode });
+
+        if (!locker) {
+            return res.status(404).json({ error: "Locker not found" });
+        }
+
+        if (new Date() > locker.expirationDate) {
+            return res.status(410).json({ error: "Link Expired" });
+        }
+
+        res.json({
+            title: locker.title,
+            requiresPassword: !!locker.passwordHash,
+            expirationDate: locker.expirationDate,
+            views: locker.views,
+        });
+    } catch (error) {
+        res.status(500).json({ error: "Server Error" });
+    }
+});
 module.exports = router;
