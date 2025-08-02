@@ -96,6 +96,9 @@ router.post("/:shortCode/unlock", async (req, res) => {
             return res.status(401).json({ error: "Invalid password" });
         }
 
+        locker.views += 1;
+        await locker.save();
+
         res.json({ destinationUrl: locker.destinationUrl });
     } catch (error) {
         res.status(500).json({ error: "Server error" });
