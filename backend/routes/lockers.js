@@ -50,7 +50,7 @@ router.post("/", async (req, res) => {
 });
 
 //retrieve locker details
-router.get("/:shortcode", async (req, res) => {
+router.get("/:shortCode", async (req, res) => {
     try {
         const locker = await Locker.findOne({ shortCode: req.params.shortCode });
 
@@ -69,7 +69,7 @@ router.get("/:shortcode", async (req, res) => {
             views: locker.views,
         });
     } catch (error) {
-        res.json(500).json({ error: "Server Error" });
+        res.status(500).json({ error: "Server Error" });
     }
 });
 
