@@ -87,6 +87,36 @@ router.get("/:shortCode", async (req, res) => {
     }
 });
 
+//update locker
+router.put("/:shortCode", async (req, res) => {
+    try {
+        const { shortCode } = req.params;
+        const updates = req.body;
+
+        if (updates.password) {
+            updates.passwordHash = await bcrypt.hash(updates.password, 10);
+            delete updates.password;
+        }
+
+        if (updates.expirationDays) {
+            const expirationDate = new Date();
+            expirationDate.setDate(expirationDate.getDate() + Number(updates.expirationDays));
+            updates.expirationDate = expirationDate;
+            delete updates.expirationDays;
+        }
+
+        const updatedLocker = await Locker.findOneAndUpdate({ shortCode }, { $set: updates }, { new: true });
+
+        if (!updatedLocker) {
+            return res.status(404).json({ error: "Locker not found" });
+        }
+
+        res.json({ message: "Locker updated", locker: updatedLocker });
+    } catch (error) {
+        res.status(500).json({ error: "Server Error" });
+    }
+});
+
 //validate password for locker and return link from locker
 router.post("/:shortCode/unlock", async (req, res) => {
     try {
