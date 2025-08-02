@@ -73,4 +73,28 @@ router.get("/:shortCode", async (req, res) => {
     }
 });
 
+//validate password for locker and return link from locker
+router.post(".shortCode/unlock", async (req, res) => {
+    try {
+        const { password } = req.body;
+        const locker = await Locker.findOne({ shortCode: req.params.shortCode });
+
+        if (!locker) {
+            return res.status(404).json({ error: "Locker not found" });
+        }
+
+        if (new Date() > locker.expirationDate) {
+            return res.status(410).json({ error: "Link Expired" });
+        }
+
+        if (!match) {
+            return res.status(401).json({ error: "Invalid password" });
+        }
+
+        res.json({ destinationUrl: locker.destinationUrl });
+    } catch (error) {
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
 module.exports = router;
