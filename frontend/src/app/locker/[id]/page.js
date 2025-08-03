@@ -1,3 +1,11 @@
+import LockerSkeleton from "@/components/Loaders/LockerSkeleton";
+
 export default function LockerPage() {
-    return <div className="p-6 text-lg">This is the Individual Locker page.</div>;
+    const isLoading = true;
+
+    return (
+        <div className="p-6">
+            {isLoading ? <LockerSkeleton count={1} className="max-w-md" /> : <div>Locker details go here</div>}
+        </div>
+    );
 }

@@ -1,3 +1,12 @@
+import LockerSkeleton from "@/components/Loaders/LockerSkeleton";
+
 export default function DashboardPage() {
-    return <div className="p-6 text-lg">This is the Dashboard page.</div>;
+    const isLoading = true;
+
+    return (
+        <div className="p-6">
+            <h1 className="text-xl font-bold mb-4">Locker Loading Skeleton</h1>
+            {isLoading ? <LockerSkeleton count={5} /> : <div>real lockers go here</div>}
+        </div>
+    );
 }
