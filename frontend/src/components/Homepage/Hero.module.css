@@ -1,3 +1,5 @@
 .hero {
     background-image: url(../../../public/img/home-hero-bg.png);
+    background-repeat: no-repeat;
+    background-size: cover;
 }
