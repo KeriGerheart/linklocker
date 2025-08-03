@@ -15,7 +15,7 @@ export default function Hero() {
                         manage access, and track views effortlessly.
                     </p>
                     <div className="flex justify-center pt-6">
-                        <Link href="/signup">
+                        <Link href="/sign-up">
                             <button className="primary">Get Started</button>
                         </Link>
                     </div>
