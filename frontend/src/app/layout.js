@@ -21,9 +21,19 @@ export const metadata = {
     description: "Secure one-time link sharing",
 };
 
+const localization = {
+    signUp: {
+        start: {
+            title: "Sign Up for LinkLocker",
+            subtitle: "Create your secure links in seconds.",
+        },
+    },
+    formButtonPrimary: "Sign Up",
+};
+
 export default function RootLayout({ children }) {
     return (
-        <ClerkProvider>
+        <ClerkProvider localization={localization}>
             <html lang="en" className={`${roboto.variable} ${montserrat.variable}`}>
                 <body className="antialiased flex flex-col min-h-screen">
                     <Header />
