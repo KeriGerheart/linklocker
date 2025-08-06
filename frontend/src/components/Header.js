@@ -18,9 +18,7 @@ export default function Header() {
 
     return (
         <header className="bg-white font-body shadow-md">
-            <nav
-                aria-label="Global"
-                className="mx-auto flex items-center justify-between py-6 gap-8 px-4 sm:px-8 lg:px-16 xl:px-20 2xl:px-24">
+            <nav aria-label="Global" className="mx-auto max-w-7xl flex items-center justify-between py-6 gap-8">
                 <Link href="/" className="flex items-end -translate-y-1">
                     <Image src="/linklocker.svg" alt="LinkLocker Logo" width={40} height={40} />
                     <span className="text-lg text-dark_grey font-semibold">LinkLocker</span>
