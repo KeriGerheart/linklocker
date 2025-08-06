@@ -1,4 +1,4 @@
-import { ClerkProvider } from "@clerk/nextjs";
+import { ClerkProvider, SignIn } from "@clerk/nextjs";
 import { Roboto, Montserrat } from "next/font/google";
 import "./globals.css";
 import Header from "../components/Header";
@@ -28,7 +28,11 @@ const localization = {
             subtitle: "Create your secure links in seconds.",
         },
     },
-    formButtonPrimary: "Sign Up",
+    signIn: {
+        start: {
+            subtitle: "Enter your credentials to access your secure lockers.",
+        },
+    },
 };
 
 export default function RootLayout({ children }) {
