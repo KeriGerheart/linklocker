@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { CheckCircleIcon, DocumentDuplicateIcon } from "@heroicons/react/24/outline";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function LockerCreatedPage({ lockerUrl = "https://example.com/locker/123" }) {
     const router = useRouter();
@@ -37,16 +38,16 @@ export default function LockerCreatedPage({ lockerUrl = "https://example.com/loc
             </div>
 
             <div className="flex gap-3">
-                <button
-                    onClick={() => router.push("/create-locker")}
-                    className="bg-primary_blue hover:bg-secondary_blue text-white text-sm font-medium px-4 py-2 rounded-md transition">
-                    Create Another Locker
-                </button>
-                <button
-                    onClick={() => router.push("/dashboard")}
-                    className="border border-gray-400 text-dark_grey text-sm font-medium px-4 py-2 rounded-md hover:bg-gray-100 transition">
-                    Go to Dashboard
-                </button>
+                <Link href="/create-locker">
+                    <button className="bg-primary_blue hover:bg-secondary_blue text-white text-sm font-medium px-4 py-2 rounded-md transition">
+                        Create Another Locker
+                    </button>
+                </Link>
+                <Link href="/dashboard">
+                    <button className="border border-gray-400 text-dark_grey text-sm font-medium px-4 py-2 rounded-md hover:bg-gray-100 transition">
+                        Go to Dashboard
+                    </button>
+                </Link>
             </div>
         </div>
     );

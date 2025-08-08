@@ -5,7 +5,7 @@ import { Dialog, DialogPanel } from "@headlessui/react";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import Image from "next/image";
 import Link from "next/link";
-import { SignedIn, SignedOut, SignInButton, SignUpButton } from "@clerk/nextjs";
+import { SignedIn, SignedOut, SignInButton, SignUpButton, SignOutButton } from "@clerk/nextjs";
 
 const navigation = [
     { name: "Home", href: "#" },
@@ -44,6 +44,7 @@ export default function Header() {
                                 {item.name}
                             </Link>
                         ))}
+                        <SignOutButton />
                     </SignedIn>
                     <SignedOut>
                         <SignInButton className="text-sm/6 font-semibold text-primary_blue hover:text-dark_grey transition-colors duration-200" />
