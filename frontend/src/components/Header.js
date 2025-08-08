@@ -44,11 +44,22 @@ export default function Header() {
                                 {item.name}
                             </Link>
                         ))}
-                        <SignOutButton />
+                        <SignOutButton
+                            redirectUrl="/sign-in"
+                            className="text-sm/6 font-semibold text-dark_grey hover:text-primary_blue transition-colors duration-200"
+                        />
                     </SignedIn>
                     <SignedOut>
-                        <SignInButton className="text-sm/6 font-semibold text-primary_blue hover:text-dark_grey transition-colors duration-200" />
-                        <SignUpButton className="text-sm/6 font-semibold text-primary_blue hover:text-dark_grey transition-colors duration-200" />
+                        <Link
+                            className="text-sm/6 font-semibold text-primary_blue hover:text-dark_grey transition-colors duration-200"
+                            href="/sign-in">
+                            Sign In
+                        </Link>
+                        <Link
+                            className="text-sm/6 font-semibold text-primary_blue hover:text-dark_grey transition-colors duration-200"
+                            href="/sign-up">
+                            Sign Up
+                        </Link>
                     </SignedOut>
                 </div>
             </nav>
