@@ -1,56 +1,105 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState, useMemo } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { getPublicLocker, unlockLocker } from "@/lib/api";
 import LockerSkeleton from "@/components/Loaders/LockerSkeleton";
 import { LockClosedIcon, LockOpenIcon, ClockIcon, DocumentDuplicateIcon } from "@heroicons/react/24/outline";
 
-export default function View98LockerPage({ params }) {
+function formatExpiresLabel(dateStr) {
+    const d = new Date(dateStr);
+    const diffMs = d.getTime() - Date.now();
+    if (diffMs <= 0) return "Expired";
+    const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+    if (diffDays <= 1) return "Expires in 24h";
+    return `Expires in ${diffDays} days`;
+}
+
+export default function ViewLockerPage() {
     const router = useRouter();
-    const { shortCode } = params;
+    const { shortCode } = useParams();
 
     // states
     const [loading, setLoading] = useState(true);
-    const [isLocked, setIsLocked] = useState(true);
-    const [title, setTitle] = useState("");
-    const [destinationUrl, setDestinationUrl] = useState("");
-    const [expiresLabel, setExpiresLabel] = useState("");
-    const [password, setPassword] = useState("");
+    const [unlocking, setUnlocking] = useState(false);
     const [error, setError] = useState("");
+    const [title, setTitle] = useState("");
+    const [requiresPassword, setRequiresPassword] = useState(false);
+    const [destinationUrl, setDestinationUrl] = useState("");
+    const [expirationDate, setExpirationDate] = useState("");
+    const [views, setViews] = useState(0);
+    const [password, setPassword] = useState("");
     const [copied, setCopied] = useState(false);
 
-    // placeholder for testing
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            // placeholder fetch data
-            setTitle("Very Important Link");
-            setDestinationUrl("https://example.com/some/real/link");
-            setExpiresLabel("Expires in 2 days");
-            setIsLocked(false);
-            setLoading(false);
-        }, 800);
-        return () => clearTimeout(timer);
-    }, [shortCode]);
+    const expiresLabel = useMemo(() => (expirationDate ? formatExpiresLabel(expirationDate) : ""), [expirationDate]);
 
+    // Initial meta fetch
+    useEffect(() => {
+        let cancelled = false;
+        (async () => {
+            try {
+                const meta = await getPublicLocker(shortCode);
+                if (cancelled) return;
+                setTitle(meta.title);
+                setRequiresPassword(!!meta.requiresPassword);
+                setExpirationDate(meta.expirationDate);
+                setViews(meta.views ?? 0);
+
+                // If not locked, unlock immediately (increments views server-side)
+                if (!meta.requiresPassword) {
+                    setUnlocking(true);
+                    const { destinationUrl } = await unlockLocker(shortCode, "");
+                    if (cancelled) return;
+                    setDestinationUrl(destinationUrl);
+                    setViews((v) => v + 1); // optimistic bump to reflect increment
+                }
+            } catch (e) {
+                if (e.status === 410) {
+                    router.replace("/expired-locker");
+                    return;
+                }
+                setError(e.message || "Failed to load locker.");
+            } finally {
+                if (!cancelled) {
+                    setLoading(false);
+                    setUnlocking(false);
+                }
+            }
+        })();
+        return () => {
+            cancelled = true;
+        };
+    }, [shortCode, router]);
+
+    // Copy helper
     const handleCopy = async () => {
         try {
             await navigator.clipboard.writeText(destinationUrl);
             setCopied(true);
-            setTimeout(() => setCopied(false), 2000);
-        } catch (err) {
-            console.error("Copy failed", err);
+            setTimeout(() => setCopied(false), 1500);
+        } catch (e) {
+            /* noop */
         }
     };
 
-    const handleUnlockSubmit = (e) => {
+    // Submit password → unlock
+    const handleUnlock = async (e) => {
         e.preventDefault();
-        // testing
-        if (!password.trim()) {
-            setError("Please enter a password.");
-            return;
-        }
         setError("");
-        setIsLocked(false);
+        setUnlocking(true);
+        try {
+            const { destinationUrl } = await unlockLocker(shortCode, password);
+            setDestinationUrl(destinationUrl);
+            setViews((v) => v + 1); // reflect increment
+        } catch (e) {
+            if (e.status === 410) {
+                router.replace("/expired-locker");
+                return;
+            }
+            setError(e.message || "Invalid password");
+        } finally {
+            setUnlocking(false);
+        }
     };
 
     if (loading) {
@@ -65,8 +114,17 @@ export default function View98LockerPage({ params }) {
     return (
         <div className="max-w-2xl mx-auto mt-12 md:border p-6 md:rounded-lg md:shadow-sm">
             <div className="mb-6 text-center">
-                <h1 className="text-2xl font-bold font-heading text-dark_grey">{title}</h1>
+                <h1 className="text-2xl font-bold font-heading text-dark_grey">{title || "Shared Link"}</h1>
+                <p className="text-sm mb-4">
+                    {expiresLabel} • Views: <span className="font-medium">{views}</span>
+                </p>
             </div>
+
+            {error && (
+                <div className="mb-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                    {error}
+                </div>
+            )}
 
             <div className="flex items-center justify-center gap-2 text-sm mb-6">
                 <ClockIcon className="w-4 h-4" aria-hidden="true" />
@@ -74,14 +132,14 @@ export default function View98LockerPage({ params }) {
             </div>
 
             <div className="bg-[#f7f7f7] p-4 rounded-md border border-light_grey border-dashed">
-                {isLocked ? (
+                {requiresPassword && !destinationUrl && (
                     <>
                         <div className="flex items-center gap-2 mb-4">
                             <LockClosedIcon className="w-5 h-5 text-primary_blue" />
                             <p className="text-dark_grey font-medium">This locker is password protected</p>
                         </div>
 
-                        <form onSubmit={handleUnlockSubmit} className="space-y-4">
+                        <form onSubmit={handleUnlock} className="space-y-4">
                             <div>
                                 <label className="block text-sm font-medium text-dark_grey mb-1">Enter Password</label>
                                 <input
@@ -94,12 +152,16 @@ export default function View98LockerPage({ params }) {
                                 {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
                             </div>
 
-                            <button type="submit" className="primary w-full py-2 rounded-md">
-                                Unlock
+                            <button
+                                type="submit"
+                                disabled={unlocking || !password}
+                                className="primary w-full py-2 rounded-md">
+                                {unlocking ? "Unlocking..." : "Unlock"}
                             </button>
                         </form>
                     </>
-                ) : (
+                )}
+                {destinationUrl && (
                     <>
                         <div className="flex items-center gap-2 mb-4">
                             <LockOpenIcon className="w-5 h-5 text-primary_blue" />

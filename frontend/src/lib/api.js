@@ -9,9 +9,12 @@ async function jsonFetch(path, options = {}) {
     try {
         data = await res.json();
     } catch {}
+
     if (!res.ok) {
-        const msg = (data && (data.error || data.message)) || "Request failed";
-        throw new Error(msg);
+        const err = new Error((data && (data.error || data.message)) || "Request failed");
+        err.status = res.status; // <-- add status
+        err.payload = data;
+        throw err;
     }
     return data;
 }
@@ -41,11 +44,11 @@ export async function deleteLocker(shortCode) {
 
 //view locker
 export async function getPublicLocker(shortCode) {
-    return jsonFetch(`/api/lockers/view/${encodeURIComponent(shortCode)}`);
+    return jsonFetch(`/api/view/${encodeURIComponent(shortCode)}`);
 }
 
 export async function unlockLocker(shortCode, password = "") {
-    return jsonFetch(`/api/lockers/view/${encodeURIComponent(shortCode)}/unlock`, {
+    return jsonFetch(`/api/view/${encodeURIComponent(shortCode)}/unlock`, {
         method: "POST",
         body: JSON.stringify({ password }),
     });

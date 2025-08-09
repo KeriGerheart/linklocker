@@ -13,8 +13,10 @@ mongoose
     .catch((err) => console.error("MongoDB connection error:", err));
 
 const lockerRoutes = require("./routes/lockers");
+const viewRoutes = require("./routes/view");
 
 app.use("/api/lockers", lockerRoutes);
+app.use("/api/view", viewRoutes);
 
 app.get("/", (req, res) => res.send("API is running"));
 app.listen(3001, () => console.log("Server running on port 3001"));
