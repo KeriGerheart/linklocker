@@ -1,13 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { CheckCircleIcon, DocumentDuplicateIcon } from "@heroicons/react/24/outline";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
-export default function LockerCreatedPage({ lockerUrl = "https://example.com/locker/123" }) {
+export default function LockerCreatedPage() {
+    const params = useSearchParams();
     const router = useRouter();
+
     const [copied, setCopied] = useState(false);
+
+    const code = params.get("code");
+
+    const lockerUrl = useMemo(() => {
+        if (!code) return "";
+        const origin = typeof window !== "undefined" ? window.location.origin : process.env.NEXT_PUBLIC_SITE_URL || "";
+        return `${origin}/locker/${code}`;
+    }, [code]);
+
+    useEffect(() => {
+        if (!code) {
+            router.replace("/dashboard");
+        }
+    }, [code, router]);
 
     const handleCopy = async () => {
         try {
@@ -18,6 +34,8 @@ export default function LockerCreatedPage({ lockerUrl = "https://example.com/loc
             console.error("Copy failed", err);
         }
     };
+
+    if (!code) return null;
 
     return (
         <div className="min-h-screen flex flex-col items-center pt-12 px-4 text-center">
