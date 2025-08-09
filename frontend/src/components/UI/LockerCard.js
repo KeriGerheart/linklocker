@@ -38,10 +38,10 @@ export default function LockerCard({ locker }) {
                     <EyeIcon className="w-4 h-4" aria-hidden="true" /> Views: {locker.views}
                 </p>
                 <div className="mt-3 flex gap-2 pb-2">
-                    <button className="flex-1 text-dark_grey font-medium border border-dark_grey p-2 rounded-md text-sm flex items-center justify-center gap-1 hover:bg-dark_grey hover:text-white transition-colors duration-200">
+                    <button className="flex-1 text-dark_grey font-medium border border-dark_grey p-2 rounded-md text-sm flex items-center justify-center gap-1 hover:bg-primary_blue hover:border-primary_blue hover:text-white transition-colors duration-200">
                         <DocumentDuplicateIcon className="w-4 h-4" aria-hidden="true" /> Copy Link
                     </button>
-                    <button className="flex-1 text-dark_grey font-medium border border-dark_grey p-2 rounded-md text-sm flex items-center justify-center gap-1 hover:bg-dark_grey hover:text-white transition-colors duration-200">
+                    <button className="flex-1 text-dark_grey font-medium border border-dark_grey p-2 rounded-md text-sm flex items-center justify-center gap-1 hover:bg-primary_blue hover:border-primary_blue hover:text-white transition-colors duration-200">
                         <PencilSquareIcon className="w-4 h-4" aria-hidden="true" /> Edit
                     </button>
                 </div>

@@ -7,7 +7,7 @@ export default function CreateLockerPage() {
     const [passwordEnabled, setPasswordEnabled] = useState(false);
 
     return (
-        <div className="max-w-2xl mx-auto mt-8 border p-6 rounded-lg shadow-sm">
+        <div className="max-w-2xl mx-auto mt-8 md:border p-6 md:rounded-lg md:shadow-sm">
             <div className="flex flex-col gap-2 pb-6">
                 <h1 className="text-2xl font-bold font-heading text-dark_grey">Create a New Locker</h1>
                 <p>Securely share your links with password protection and expiration settings.</p>

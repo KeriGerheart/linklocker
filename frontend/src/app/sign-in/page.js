@@ -4,7 +4,7 @@ import { SignIn } from "@clerk/nextjs";
 
 export default function SignInPage() {
     return (
-        <div className="flex items-center justify-center min-h-screen px-4">
+        <div className="flex pt-12 justify-center min-h-screen px-4">
             <SignIn
                 signUpUrl="/sign-up"
                 routing="hash"

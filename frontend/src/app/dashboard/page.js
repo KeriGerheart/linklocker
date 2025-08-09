@@ -36,7 +36,7 @@ export default function DashboardPage() {
 
     if (loading) {
         return (
-            <div className="max-w-7xl mx-auto">
+            <div className="max-w-7xl mx-auto px-4 2xl:px-0 pt-8">
                 {Array(3)
                     .fill(0)
                     .map((_, idx) => (
@@ -53,8 +53,8 @@ export default function DashboardPage() {
     }
 
     return (
-        <div className="max-w-7xl mx-auto">
-            <h1 className="text-2xl font-bold mb-4 pt-6 font-heading text-dark_grey">Welcome Back, NAME</h1>
+        <div className="max-w-7xl mx-auto px-4 2xl:px-0 pt-8">
+            <h1 className="text-2xl font-bold mb-4 font-heading text-dark_grey">Welcome Back, NAME</h1>
             <p className="pb-6">Here&#39;s an overview of your lockers.</p>
             <hr />
             <Locker lockers={lockers} />

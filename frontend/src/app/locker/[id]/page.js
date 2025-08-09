@@ -26,7 +26,7 @@ export default function View98LockerPage({ params }) {
             setTitle("Very Important Link");
             setDestinationUrl("https://example.com/some/real/link");
             setExpiresLabel("Expires in 2 days");
-            setIsLocked(true);
+            setIsLocked(false);
             setLoading(false);
         }, 800);
         return () => clearTimeout(timer);
@@ -63,7 +63,7 @@ export default function View98LockerPage({ params }) {
 
     // content
     return (
-        <div className="max-w-2xl mx-auto mt-8 border p-6 rounded-lg shadow-sm">
+        <div className="max-w-2xl mx-auto mt-12 md:border p-6 md:rounded-lg md:shadow-sm">
             <div className="mb-6 text-center">
                 <h1 className="text-2xl font-bold font-heading text-dark_grey">{title}</h1>
             </div>
@@ -106,7 +106,7 @@ export default function View98LockerPage({ params }) {
                             <p className="text-dark_grey font-medium">Unlocked</p>
                         </div>
 
-                        <div className="bg-white rounded-md px-4 py-3 flex items-center justify-between gap-3">
+                        <div className="bg-white rounded-md px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3">
                             <p className="text-sm break-all text-dark_grey">{destinationUrl}</p>
                             <button
                                 onClick={handleCopy}

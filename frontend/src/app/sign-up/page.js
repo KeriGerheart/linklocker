@@ -4,7 +4,7 @@ import { SignUp } from "@clerk/nextjs";
 
 export default function SignUpPage() {
     return (
-        <div className="flex items-center justify-center min-h-screen px-4">
+        <div className="flex pt-12 justify-center min-h-screen px-4">
             <SignUp
                 routing="hash"
                 appearance={{
