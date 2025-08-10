@@ -9,31 +9,43 @@ const router = express.Router();
 router.post("/", async (req, res) => {
     try {
         const { title, destinationUrl, password, expirationDays, ownerId } = req.body;
-
         if (!title || !destinationUrl || !expirationDays || !ownerId) {
             return res.status(400).json({ error: "Missing required fields" });
         }
 
-        let passwordHash;
-        if (password && password.trim() !== "") {
-            passwordHash = await bcrypt.hash(password, 10);
-        }
-
-        const shortCode = nanoid(6);
+        const passwordHash = password?.trim() ? await bcrypt.hash(password, 10) : undefined;
 
         const expirationDate = new Date();
         expirationDate.setDate(expirationDate.getDate() + Number(expirationDays));
 
-        const newLocker = new Locker({
-            title,
-            destinationUrl,
-            shortCode,
-            passwordHash,
-            expirationDate,
-            ownerId,
-        });
+        const MAX_TRIES = 5;
+        let attempt = 0;
+        let newLocker;
 
-        await newLocker.save();
+        while (attempt < MAX_TRIES) {
+            const shortCode = nanoid(6);
+            try {
+                newLocker = await Locker.create({
+                    title,
+                    destinationUrl,
+                    shortCode,
+                    passwordHash,
+                    expirationDate,
+                    ownerId,
+                });
+                break;
+            } catch (err) {
+                if (err?.code === 11000 && err?.keyPattern?.shortCode) {
+                    attempt += 1;
+                    if (attempt >= MAX_TRIES) {
+                        return res.status(503).json({ error: "Could not generate unique short code. Please retry." });
+                    }
+                    continue;
+                }
+
+                throw err;
+            }
+        }
 
         return res.status(201).json({
             message: "Locker created!",

@@ -12,7 +12,7 @@ async function jsonFetch(path, options = {}) {
 
     if (!res.ok) {
         const err = new Error((data && (data.error || data.message)) || "Request failed");
-        err.status = res.status; // <-- add status
+        err.status = res.status;
         err.payload = data;
         throw err;
     }

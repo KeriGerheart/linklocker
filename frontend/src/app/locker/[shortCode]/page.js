@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { getPublicLocker, unlockLocker } from "@/lib/api";
 import LockerSkeleton from "@/components/Loaders/LockerSkeleton";
-import { LockClosedIcon, LockOpenIcon, ClockIcon, DocumentDuplicateIcon } from "@heroicons/react/24/outline";
+import { LockClosedIcon, LockOpenIcon, ClockIcon, DocumentDuplicateIcon, EyeIcon } from "@heroicons/react/24/outline";
 
 function formatExpiresLabel(dateStr) {
     const d = new Date(dateStr);
@@ -33,7 +33,6 @@ export default function ViewLockerPage() {
 
     const expiresLabel = useMemo(() => (expirationDate ? formatExpiresLabel(expirationDate) : ""), [expirationDate]);
 
-    // Initial meta fetch
     useEffect(() => {
         let cancelled = false;
         (async () => {
@@ -45,13 +44,12 @@ export default function ViewLockerPage() {
                 setExpirationDate(meta.expirationDate);
                 setViews(meta.views ?? 0);
 
-                // If not locked, unlock immediately (increments views server-side)
                 if (!meta.requiresPassword) {
                     setUnlocking(true);
                     const { destinationUrl } = await unlockLocker(shortCode, "");
                     if (cancelled) return;
                     setDestinationUrl(destinationUrl);
-                    setViews((v) => v + 1); // optimistic bump to reflect increment
+                    setViews((v) => v + 1);
                 }
             } catch (e) {
                 if (e.status === 410) {
@@ -71,7 +69,6 @@ export default function ViewLockerPage() {
         };
     }, [shortCode, router]);
 
-    // Copy helper
     const handleCopy = async () => {
         try {
             await navigator.clipboard.writeText(destinationUrl);
@@ -82,7 +79,6 @@ export default function ViewLockerPage() {
         }
     };
 
-    // Submit password → unlock
     const handleUnlock = async (e) => {
         e.preventDefault();
         setError("");
@@ -90,7 +86,7 @@ export default function ViewLockerPage() {
         try {
             const { destinationUrl } = await unlockLocker(shortCode, password);
             setDestinationUrl(destinationUrl);
-            setViews((v) => v + 1); // reflect increment
+            setViews((v) => v + 1);
         } catch (e) {
             if (e.status === 410) {
                 router.replace("/expired-locker");
@@ -113,18 +109,19 @@ export default function ViewLockerPage() {
     // content
     return (
         <div className="max-w-2xl mx-auto mt-12 md:border p-6 md:rounded-lg md:shadow-sm">
-            <div className="mb-6 text-center">
-                <h1 className="text-2xl font-bold font-heading text-dark_grey">{title || "Shared Link"}</h1>
-                <p className="text-sm mb-4">
-                    {expiresLabel} • Views: <span className="font-medium">{views}</span>
-                </p>
-            </div>
+            <h1 className="text-2xl text-center mb-2 font-bold font-heading text-dark_grey">
+                {title || "Shared Link"}
+            </h1>
 
             {error && (
                 <div className="mb-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
                     {error}
                 </div>
             )}
+            <div className="flex items-center justify-center gap-2 text-sm pb-2">
+                <EyeIcon className="w-4 h-4" aria-hidden="true" />
+                <span>Views: {views}</span>
+            </div>
 
             <div className="flex items-center justify-center gap-2 text-sm mb-6">
                 <ClockIcon className="w-4 h-4" aria-hidden="true" />
