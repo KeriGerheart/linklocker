@@ -3,6 +3,7 @@ import { Roboto, Montserrat } from "next/font/google";
 import "./globals.css";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import QueryProviders from "./query-providers";
 
 const roboto = Roboto({
     subsets: ["latin"],
@@ -40,9 +41,11 @@ export default function RootLayout({ children }) {
         <ClerkProvider localization={localization}>
             <html lang="en" className={`${roboto.variable} ${montserrat.variable}`}>
                 <body className="antialiased flex flex-col min-h-screen">
-                    <Header />
-                    <main className="flex-grow">{children}</main>
-                    <Footer />
+                    <QueryProviders>
+                        <Header />
+                        <main className="flex-grow">{children}</main>
+                        <Footer />
+                    </QueryProviders>
                 </body>
             </html>
         </ClerkProvider>
