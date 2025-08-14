@@ -12,7 +12,7 @@ export default function LockerCard({ locker }) {
         <div className="border rounded-lg py-2 shadow-sm hover:shadow-md transition">
             <div className="flex flex-col px-4 pb-2">
                 <h2 className="text-lg font-semibold font-heading text-dark_grey">{locker.title}</h2>
-                <p className="text-sm">{locker.url}</p>
+                <p className="text-sm">{locker.destinationUrl}</p>
             </div>
 
             <hr />

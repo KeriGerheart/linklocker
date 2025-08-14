@@ -1,40 +1,21 @@
 "use client";
-import { useEffect, useState } from "react";
-import Locker from "@/components/UI/Locker";
-import { useUser } from "@clerk/nextjs";
 
+import { useUser } from "@clerk/nextjs";
+import { useQuery } from "@tanstack/react-query";
+import { getUserLockers } from "@/lib/api";
+import Locker from "@/components/UI/Locker";
 import Skeleton from "@/components/Loaders/Skeleton";
 
 export default function DashboardPage() {
-    const [lockers, setLockers] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const { user, isLoaded } = useUser();
 
-    useEffect(() => {
-        // Simulate network delay
-        setTimeout(() => {
-            setLockers([
-                {
-                    shortCode: "abc123",
-                    title: "Test Locker 1",
-                    url: "testlocker1.com",
-                    passwordHash: null,
-                    expirationDate: new Date().toISOString(),
-                    views: 12,
-                },
-                {
-                    shortCode: "xyz789",
-                    title: "Test Locker 2",
-                    url: "testlocker2.com",
-                    passwordHash: "hashed-password",
-                    expirationDate: new Date().toISOString(),
-                    views: 4,
-                },
-            ]);
-            setLoading(false);
-        }, 1000);
-    }, []);
+    const q = useQuery({
+        queryKey: ["lockers", user?.id],
+        queryFn: () => getUserLockers(user.id),
+        enabled: isLoaded && !!user?.id,
+    });
 
-    if (loading) {
+    if (!isLoaded || q.isLoading) {
         return (
             <div className="max-w-7xl mx-auto px-4 2xl:px-0 pt-8">
                 {Array(3)
@@ -52,12 +33,27 @@ export default function DashboardPage() {
         );
     }
 
+    if (q.error) {
+        return (
+            <div className="max-w-7xl mx-auto px-4 2xl:px-0 pt-8">
+                <h1 className="text-2xl font-bold mb-4 font-heading text-dark_grey">
+                    Welcome Back, {user?.firstName || user?.username || "Friend"}!
+                </h1>
+                <p className="pb-6">Here&#39;s an overview of your lockers.</p>
+                <hr />
+                <div className="p-6 text-sm text-red-600">Failed to load lockers: {q.error.message}</div>
+            </div>
+        );
+    }
+
     return (
         <div className="max-w-7xl mx-auto px-4 2xl:px-0 pt-8">
-            <h1 className="text-2xl font-bold mb-4 font-heading text-dark_grey">Welcome Back, NAME</h1>
+            <h1 className="text-2xl font-bold mb-4 font-heading text-dark_grey">
+                Welcome Back, {user?.firstName || user?.username || "Friend"}!
+            </h1>
             <p className="pb-6">Here&#39;s an overview of your lockers.</p>
             <hr />
-            <Locker lockers={lockers} />
+            <Locker lockers={q.data ?? []} />
         </div>
     );
 }

@@ -4,11 +4,13 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { Switch } from "@headlessui/react";
+import { useQueryClient } from "@tanstack/react-query";
 import { createLocker } from "@/lib/api";
 
 export default function CreateLockerPage() {
     const router = useRouter();
     const { user } = useUser();
+    const queryClient = useQueryClient();
 
     const [title, setTitle] = useState("");
     const [destinationUrl, setDestinationUrl] = useState("");
@@ -42,6 +44,8 @@ export default function CreateLockerPage() {
             });
 
             const shortCode = data?.locker?.shortCode;
+
+            await queryClient.invalidateQueries({ queryKey: ["lockers", user.id] });
             router.push(`/locker-created?code=${encodeURIComponent(shortCode)}`);
         } catch (err) {
             setError(err.message || "Failed to create locker.");
@@ -58,7 +62,6 @@ export default function CreateLockerPage() {
             </div>
 
             <form className="space-y-6" onSubmit={handleSubmit}>
-                {/* Title */}
                 <div>
                     <label className="block text-sm font-medium mb-1 text-dark_grey">Locker Title</label>
                     <input
@@ -70,7 +73,6 @@ export default function CreateLockerPage() {
                     />
                 </div>
 
-                {/* Destination URL */}
                 <div>
                     <label className="block text-sm font-medium mb-1 text-dark_grey">Destination URL</label>
                     <input
@@ -82,7 +84,6 @@ export default function CreateLockerPage() {
                     />
                 </div>
 
-                {/* Security options */}
                 <div className="bg-[#f7f7f7] p-4 rounded-md border border-light_grey border-dashed">
                     <p className="font-heading text-dark_grey text-lg font-semibold pb-4">Security Options</p>
 

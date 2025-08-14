@@ -1,8 +1,16 @@
 import LockerCard from "./LockerCard";
+import Link from "next/link";
 
 export default function Locker({ lockers }) {
     if (!lockers || lockers.length === 0) {
-        return <p>No lockers found. Create one to get started!</p>;
+        return (
+            <p className="pt-5">
+                No lockers found.{" "}
+                <Link href="/create-locker" className="text-primary_blue font-semibold">
+                    Create one to get started!
+                </Link>
+            </p>
+        );
     }
 
     return (
