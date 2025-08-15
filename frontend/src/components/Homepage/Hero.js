@@ -1,5 +1,4 @@
 import styles from "./Hero.module.css";
-import { SignInButton, SignUpButton } from "@clerk/nextjs";
 import Link from "next/link";
 
 export default function Hero() {

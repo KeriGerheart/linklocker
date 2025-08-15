@@ -1,16 +1,20 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useMemo, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { Switch } from "@headlessui/react";
-import { useQueryClient } from "@tanstack/react-query";
-import { createLocker } from "@/lib/api";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
+import { createLocker, getUserLockers, updateLocker } from "@/lib/api";
 
 export default function CreateLockerPage() {
     const router = useRouter();
+    const params = useSearchParams();
     const { user } = useUser();
     const queryClient = useQueryClient();
+
+    const editShortCode = params.get("edit");
+    const isEdit = !!editShortCode;
 
     const [title, setTitle] = useState("");
     const [destinationUrl, setDestinationUrl] = useState("");
@@ -19,6 +23,33 @@ export default function CreateLockerPage() {
     const [expirationDays, setExpirationDays] = useState("1");
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState("");
+
+    const { data: lockers = [], isLoading: lockersLoading } = useQuery({
+        queryKey: ["lockers", user?.id],
+        queryFn: () => getUserLockers(user.id),
+        enabled: !!user?.id && isEdit,
+    });
+
+    const lockerFromCache = useMemo(() => {
+        if (!isEdit) return null;
+        const cachedLockers = queryClient.getQueryData(["lockers", user?.id]) || [];
+        return cachedLockers.find((l) => l.shortCode === editShortCode) || null;
+    }, [isEdit, editShortCode, queryClient, user?.id]);
+
+    useEffect(() => {
+        if (!lockerFromCache) return;
+        setTitle(lockerFromCache.title ?? "");
+        setDestinationUrl(lockerFromCache.destinationUrl ?? "");
+        setPasswordEnabled(!!lockerFromCache.passwordHash);
+    }, [lockerFromCache]);
+
+    if (isEdit && lockersLoading && !lockerFromCache) {
+        return (
+            <div className="max-w-2xl mx-auto mt-8 md:border p-6 md:rounded-lg md:shadow-sm">
+                <p>Loading locker…</p>
+            </div>
+        );
+    }
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -35,20 +66,37 @@ export default function CreateLockerPage() {
 
         setSubmitting(true);
         try {
-            const data = await createLocker({
-                title,
-                destinationUrl,
-                password: passwordEnabled ? password : "",
-                expirationDays: Number(expirationDays),
-                ownerId: user.id,
-            });
+            if (isEdit) {
+                const updates = {
+                    title,
+                    destinationUrl,
+                    expirationDays: Number(expirationDays),
+                };
 
-            const shortCode = data?.locker?.shortCode;
+                if (passwordEnabled && password.trim()) {
+                    updates.password = password.trim();
+                }
+                await updateLocker(editShortCode, updates);
+
+                await queryClient.invalidateQueries({ queryKey: ["lockers", user.id] });
+                router.push("/dashboard");
+            } else {
+                const payload = {
+                    title,
+                    destinationUrl,
+                    password: passwordEnabled ? password : "",
+                    expirationDays: Number(expirationDays),
+                    ownerId: user.id,
+                };
+
+                const data = await createLocker(payload);
+                const shortCode = data?.locker?.shortCode;
+            }
 
             await queryClient.invalidateQueries({ queryKey: ["lockers", user.id] });
             router.push(`/locker-created?code=${encodeURIComponent(shortCode)}`);
         } catch (err) {
-            setError(err.message || "Failed to create locker.");
+            setError(err.message || (isEdit ? "Failed to update locker." : "Failed to create locker."));
         } finally {
             setSubmitting(false);
         }
@@ -57,8 +105,14 @@ export default function CreateLockerPage() {
     return (
         <div className="max-w-2xl mx-auto mt-8 md:border p-6 md:rounded-lg md:shadow-sm">
             <div className="flex flex-col gap-2 pb-6">
-                <h1 className="text-2xl font-bold font-heading text-dark_grey">Create a New Locker</h1>
-                <p>Securely share your links with password protection and expiration settings.</p>
+                <h1 className="text-2xl font-bold font-heading text-dark_grey">
+                    {isEdit ? "Edit Locker" : "Create a New Locker"}
+                </h1>
+                <p>
+                    {isEdit
+                        ? "Update details for your locker."
+                        : "Securely share your links with password protection and expiration settings."}
+                </p>
             </div>
 
             <form className="space-y-6" onSubmit={handleSubmit}>
@@ -113,7 +167,7 @@ export default function CreateLockerPage() {
                             <label className="block text-sm font-medium mb-1 text-dark_grey">Password</label>
                             <input
                                 type="text"
-                                placeholder="Enter password"
+                                placeholder={isEdit ? "Leave blank to keep current password" : "Enter password"}
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 className="w-full rounded-md border border-light_grey px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary_blue"
@@ -141,7 +195,13 @@ export default function CreateLockerPage() {
                         type="submit"
                         disabled={submitting || !user?.id}
                         className="primary w-full py-2 text-center rounded-md disabled:opacity-60">
-                        {submitting ? "Creating..." : "Create Locker"}
+                        {submitting
+                            ? isEdit
+                                ? "Saving..."
+                                : "Creating..."
+                            : isEdit
+                            ? "Save Changes"
+                            : "Create Locker"}
                     </button>
                 </div>
             </form>

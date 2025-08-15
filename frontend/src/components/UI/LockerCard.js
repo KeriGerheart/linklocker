@@ -1,3 +1,8 @@
+"use client";
+
+import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
+
 import {
     LockClosedIcon,
     LockOpenIcon,
@@ -8,6 +13,30 @@ import {
 } from "@heroicons/react/24/outline";
 
 export default function LockerCard({ locker }) {
+    const router = useRouter();
+    const [copied, setCopied] = useState(false);
+
+    const shareUrl = useMemo(() => {
+        const base =
+            (typeof window !== "undefined" && window.location.origin) || process.env.NEXT_PUBLIC_SITE_URL || "";
+        return `${base}/locker/${locker.shortCode}`;
+    }, [locker?.shortCode]);
+
+    async function handleCopy() {
+        try {
+            await navigator.clipboard.writeText(shareUrl);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 1500);
+        } catch (e) {
+            console.error("Copy failed", e);
+            window.prompt("Copy this link:", shareUrl);
+        }
+    }
+
+    function handleEdit() {
+        router.push(`/create-locker?edit=${encodeURIComponent(locker.shortCode)}`);
+    }
+
     return (
         <div className="border rounded-lg py-2 shadow-sm hover:shadow-md transition">
             <div className="flex flex-col px-4 pb-2">
@@ -38,10 +67,15 @@ export default function LockerCard({ locker }) {
                     <EyeIcon className="w-4 h-4" aria-hidden="true" /> Views: {locker.views}
                 </p>
                 <div className="mt-3 flex gap-2 pb-2">
-                    <button className="flex-1 text-dark_grey font-medium border border-dark_grey p-2 rounded-md text-sm flex items-center justify-center gap-1 hover:bg-primary_blue hover:border-primary_blue hover:text-white transition-colors duration-200">
-                        <DocumentDuplicateIcon className="w-4 h-4" aria-hidden="true" /> Copy Link
+                    <button
+                        onClick={handleCopy}
+                        className="flex-1 text-dark_grey font-medium border border-dark_grey p-2 rounded-md text-sm flex items-center justify-center gap-1 hover:bg-primary_blue hover:border-primary_blue hover:text-white transition-colors duration-200">
+                        <DocumentDuplicateIcon className="w-4 h-4" aria-hidden="true" />{" "}
+                        {copied ? "Copied!" : "Copy Link"}
                     </button>
-                    <button className="flex-1 text-dark_grey font-medium border border-dark_grey p-2 rounded-md text-sm flex items-center justify-center gap-1 hover:bg-primary_blue hover:border-primary_blue hover:text-white transition-colors duration-200">
+                    <button
+                        onClick={handleEdit}
+                        className="flex-1 text-dark_grey font-medium border border-dark_grey p-2 rounded-md text-sm flex items-center justify-center gap-1 hover:bg-primary_blue hover:border-primary_blue hover:text-white transition-colors duration-200">
                         <PencilSquareIcon className="w-4 h-4" aria-hidden="true" /> Edit
                     </button>
                 </div>
