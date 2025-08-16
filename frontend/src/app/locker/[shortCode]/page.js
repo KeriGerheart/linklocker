@@ -58,6 +58,12 @@ export default function ViewLockerPage() {
         // eslint-disable-next-line
     }, [metaQ.isSuccess, metaQ.data?.requiresPassword, destinationUrl]);
 
+    useEffect(() => {
+        if (metaQ.isError && metaQ?.error?.status === 410) {
+            router.replace("/expired-locker");
+        }
+    }, [metaQ.isError, metaQ?.error?.status, router]);
+
     const expiresLabel = useMemo(
         () => (metaQ.data?.expirationDate ? formatExpiresLabel(metaQ.data?.expirationDate) : ""),
         [metaQ.data?.expirationDate]
@@ -73,7 +79,6 @@ export default function ViewLockerPage() {
 
     if (metaQ.error) {
         if (metaQ.error.status === 410) {
-            router.replace("/expired-locker");
             return null;
         }
         return (
