@@ -6,28 +6,18 @@ const mongoose = require("mongoose");
 const app = express();
 
 const allowedOrigins = [process.env.FRONTEND_ORIGIN];
-app.use(
-    cors({
-        origin: (origin, cb) => {
-            if (!origin) return cb(null, true);
-            if (allowedOrigins.includes(origin)) return cb(null, true);
-            return cb(new Error("Not allowed by CORS"));
-        },
-        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        allowedHeaders: ["Content-Type", "Authorization"],
-        credentials: false,
-    })
-);
+const corsOptions = {
+    origin(origin, cb) {
+        if (!origin) return cb(null, true);
+        if (allowedOrigins.includes(origin)) return cb(null, true);
+        return cb(new Error("Not allowed by CORS"));
+    },
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: false,
+};
 
-app.options(
-    "*",
-    cors({
-        origin: allowedOrigins,
-        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        allowedHeaders: ["Content-Type", "Authorization"],
-        credentials: false,
-    })
-);
+app.use(cors(corsOptions));
 
 app.use(express.json());
 
