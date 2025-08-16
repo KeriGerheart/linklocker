@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getPublicLocker, unlockLocker } from "@/lib/api";
-import LockerSkeleton from "@/components/Loaders/LockerSkeleton";
+import Spinner from "@/components/UI/Spinner";
 
 import { LockClosedIcon, LockOpenIcon, ClockIcon, DocumentDuplicateIcon, EyeIcon } from "@heroicons/react/24/outline";
 
@@ -70,11 +70,7 @@ export default function ViewLockerPage() {
     );
 
     if (metaQ.isLoading) {
-        return (
-            <div className="p-6">
-                <LockerSkeleton count={1} className="max-w-lg mx-auto" />
-            </div>
-        );
+        return <Spinner className="mt-8" />;
     }
 
     if (metaQ.error) {

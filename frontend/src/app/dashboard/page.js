@@ -4,7 +4,7 @@ import { useUser } from "@clerk/nextjs";
 import { useQuery } from "@tanstack/react-query";
 import { getUserLockers } from "@/lib/api";
 import Locker from "@/components/UI/Locker";
-import Skeleton from "@/components/Loaders/Skeleton";
+import Spinner from "@/components/UI/Spinner";
 
 export default function DashboardPage() {
     const { user, isLoaded } = useUser();
@@ -17,21 +17,7 @@ export default function DashboardPage() {
     });
 
     if (!isLoaded || q.isLoading) {
-        return (
-            <div className="max-w-7xl mx-auto px-4 2xl:px-0 pt-8">
-                {Array(3)
-                    .fill(0)
-                    .map((_, idx) => (
-                        <div key={idx} className="flex gap-4">
-                            <Skeleton className="w-16 h-16" />
-                            <div className="flex-1 space-y-2">
-                                <Skeleton className="h-4 w-1/2" />
-                                <Skeleton className="h-3 w-1/3" />
-                            </div>
-                        </div>
-                    ))}
-            </div>
-        );
+        return <Spinner className="mt-8" />;
     }
 
     if (q.error) {
