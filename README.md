@@ -32,13 +32,25 @@ npm install
 
 The backend and frontend folders each have an .env file.
 
+anything in quotes that starts with replace_with_your ..., you should replace with the appropriate values, the others (clerk redirects) should be pasted into your file as they are.
+
 For the backend you need:
 
-MONGODB_URI=your_mongodb_connection_string
+MONGODB_URI="replace_with_your_mongodb_connection_string"
+FRONTEND_ORIGIN="replace_with_your_frontend_URL"
 
 For the frontend you need:
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_next_clerk_key
-CLERK_SECRET_KEY=your_clerk_secred_key
+
+NEXT*PUBLIC_CLERK_PUBLISHABLE_KEY="replace_with_your_next_clerk_key"
+CLERK_SECRET_KEY="replace_with_your_clerk_secret_key"
+CLERK_SIGN_UP_URL=/sign-up
+NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL=/dashboard
+NEXT_PUBLIC_CLERK_SIGN_UP_FORCE_REDIRECT_URL=/dashboard
+NEXT_PUBLIC_API_BASE="replace_with_your_backend_url"
+NEXT_PUBLIC_SITE_URL=your*"replace_your_with_front_end_url"
+NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
+NEXT_PUBLIC_CLERK_SIGN_IN_FORCE_REDIRECT_URL=/dashboard
+NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL=/dashboard
 
 ---
 
@@ -46,11 +58,9 @@ CLERK_SECRET_KEY=your_clerk_secred_key
 
 ### 1. Start the server
 
-You can either install nodemon or go with node index.js
-
 ```bash
 cd backend
-node index.js
+npm run start
 ```
 
 ### 2. Start the client
@@ -60,5 +70,5 @@ cd frontend
 npm run dev
 ```
 
-Your front end will print the URL where it can be viewed (this will vary based on how many local servers you might be running).
-The backend is set to run on port 3001, but this can be changed by editing the index.js file
+When running locally, your front end will print the URL where it can be viewed (this will vary based on how many local servers you might be running).
+The backend is set to run on port 3001, but this can be changed by editing the index.js file, then your env values can be adjusted as needed.
