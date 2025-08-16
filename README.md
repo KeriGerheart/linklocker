@@ -4,6 +4,8 @@ App to share secure links
 This app uses React/Next.js on the frontend and Express on the back. The DB is Mongo.
 This app is configured using Clerk for auth. You will need to sign up for an account at https://clerk.com/ to get the API keys needed.
 
+The app is currently running live at: https://linklocker-alpha.vercel.app/
+
 ## Installation
 
 ### 1. Clone the repository
