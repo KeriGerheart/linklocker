@@ -235,10 +235,8 @@ export default function CreateLockerPage() {
                             <option value="7">7 days</option>
                         </select>
                     </div>
-
-                    {error && <p className="text-sm text-red-600">{error}</p>}
                 </div>
-
+                {error && <p className="text-sm text-red-600">{error}</p>}
                 <div className="pt-4">
                     <button
                         type="submit"

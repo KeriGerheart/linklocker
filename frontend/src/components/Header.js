@@ -52,7 +52,7 @@ export default function Header() {
                             </Link>
                         ))}
                         <SignOutButton
-                            redirectUrl="/sign-in"
+                            redirectUrl="/"
                             className="text-sm/6 font-semibold text-dark_grey hover:text-primary_blue transition-colors duration-200"
                         />
                     </SignedIn>

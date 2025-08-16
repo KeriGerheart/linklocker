@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getPublicLocker, unlockLocker } from "@/lib/api";
 import LockerSkeleton from "@/components/Loaders/LockerSkeleton";
+
 import { LockClosedIcon, LockOpenIcon, ClockIcon, DocumentDuplicateIcon, EyeIcon } from "@heroicons/react/24/outline";
 
 function formatExpiresLabel(dateStr) {
@@ -30,7 +31,11 @@ export default function ViewLockerPage() {
         queryFn: () => getPublicLocker(shortCode),
         enabled: !!shortCode,
         staleTime: 30_000,
-        retry: (count, err) => (err?.status === 410 ? false : count < 2),
+        retry: (count, err) => {
+            if (!err?.status) return count < 2; // network/etc
+            if (err.status >= 400 && err.status < 500) return false; // client errors
+            return count < 2; // server errors retry twice
+        },
     });
 
     const unlockM = useMutation({

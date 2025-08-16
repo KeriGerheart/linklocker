@@ -13,6 +13,7 @@ export default function DashboardPage() {
         queryKey: ["lockers", user?.id],
         queryFn: () => getUserLockers(user.id),
         enabled: isLoaded && !!user?.id,
+        staleTime: 60_000,
     });
 
     if (!isLoaded || q.isLoading) {

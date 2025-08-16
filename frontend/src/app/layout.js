@@ -3,6 +3,7 @@ import { Roboto, Montserrat } from "next/font/google";
 import "./globals.css";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import { Toaster } from "sonner";
 import QueryProviders from "./query-providers";
 
 const roboto = Roboto({
@@ -45,6 +46,7 @@ export default function RootLayout({ children }) {
                         <Header />
                         <main className="flex-grow">{children}</main>
                         <Footer />
+                        <Toaster richColors position="top-center" />
                     </QueryProviders>
                 </body>
             </html>
