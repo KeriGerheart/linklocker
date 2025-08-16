@@ -5,8 +5,30 @@ const mongoose = require("mongoose");
 
 const app = express();
 
-const allowed = [process.env.FRONTEND_ORIGIN];
-app.use(cors({ origin: allowed, credentials: true }));
+const allowedOrigins = [process.env.FRONTEND_ORIGIN];
+app.use(
+    cors({
+        origin: (origin, cb) => {
+            if (!origin) return cb(null, true);
+            if (allowedOrigins.includes(origin)) return cb(null, true);
+            return cb(new Error("Not allowed by CORS"));
+        },
+        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        allowedHeaders: ["Content-Type", "Authorization"],
+        credentials: false,
+    })
+);
+
+app.options(
+    "*",
+    cors({
+        origin: allowedOrigins,
+        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        allowedHeaders: ["Content-Type", "Authorization"],
+        credentials: false,
+    })
+);
+
 app.use(express.json());
 
 mongoose
@@ -22,6 +44,5 @@ app.use("/api/view", viewRoutes);
 
 app.get("/", (req, res) => res.send("API is running"));
 
-// Render sets PORT for you
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
