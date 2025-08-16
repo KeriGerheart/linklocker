@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getPublicLocker, unlockLocker } from "@/lib/api";
 import LockerSkeleton from "@/components/Loaders/LockerSkeleton";
 import { LockClosedIcon, LockOpenIcon, ClockIcon, DocumentDuplicateIcon, EyeIcon } from "@heroicons/react/24/outline";
@@ -18,56 +19,68 @@ function formatExpiresLabel(dateStr) {
 export default function ViewLockerPage() {
     const router = useRouter();
     const { shortCode } = useParams();
+    const qc = useQueryClient();
 
-    // states
-    const [loading, setLoading] = useState(true);
-    const [unlocking, setUnlocking] = useState(false);
-    const [error, setError] = useState("");
-    const [title, setTitle] = useState("");
-    const [requiresPassword, setRequiresPassword] = useState(false);
     const [destinationUrl, setDestinationUrl] = useState("");
-    const [expirationDate, setExpirationDate] = useState("");
-    const [views, setViews] = useState(0);
     const [password, setPassword] = useState("");
     const [copied, setCopied] = useState(false);
 
-    const expiresLabel = useMemo(() => (expirationDate ? formatExpiresLabel(expirationDate) : ""), [expirationDate]);
+    const metaQ = useQuery({
+        queryKey: ["lockerMeta", shortCode],
+        queryFn: () => getPublicLocker(shortCode),
+        enabled: !!shortCode,
+        staleTime: 30_000,
+        retry: (count, err) => (err?.status === 410 ? false : count < 2),
+    });
+
+    const unlockM = useMutation({
+        mutationFn: (pwd) => unlockLocker(shortCode, pwd),
+        onSuccess: (data) => {
+            setDestinationUrl(data.destinationUrl);
+            qc.setQueryData(["lockerMeta", shortCode], (prev) =>
+                prev ? { ...prev, views: (prev.views ?? 0) + 1 } : prev
+            );
+        },
+        onError: (err) => {
+            if (err.status === 410) return router.replace("/expired-locker");
+        },
+    });
 
     useEffect(() => {
-        let cancelled = false;
-        (async () => {
-            try {
-                const meta = await getPublicLocker(shortCode);
-                if (cancelled) return;
-                setTitle(meta.title);
-                setRequiresPassword(!!meta.requiresPassword);
-                setExpirationDate(meta.expirationDate);
-                setViews(meta.views ?? 0);
+        if (metaQ.isSuccess && metaQ.data && !metaQ.data.requiresPassword && !destinationUrl) {
+            unlockM.mutate("");
+        }
+        // eslint-disable-next-line
+    }, [metaQ.isSuccess, metaQ.data?.requiresPassword, destinationUrl]);
 
-                if (!meta.requiresPassword) {
-                    setUnlocking(true);
-                    const { destinationUrl } = await unlockLocker(shortCode, "");
-                    if (cancelled) return;
-                    setDestinationUrl(destinationUrl);
-                    setViews((v) => v + 1);
-                }
-            } catch (e) {
-                if (e.status === 410) {
-                    router.replace("/expired-locker");
-                    return;
-                }
-                setError(e.message || "Failed to load locker.");
-            } finally {
-                if (!cancelled) {
-                    setLoading(false);
-                    setUnlocking(false);
-                }
-            }
-        })();
-        return () => {
-            cancelled = true;
-        };
-    }, [shortCode, router]);
+    const expiresLabel = useMemo(
+        () => (metaQ.data?.expirationDate ? formatExpiresLabel(metaQ.data?.expirationDate) : ""),
+        [metaQ.data?.expirationDate]
+    );
+
+    if (metaQ.isLoading) {
+        return (
+            <div className="p-6">
+                <LockerSkeleton count={1} className="max-w-lg mx-auto" />
+            </div>
+        );
+    }
+
+    if (metaQ.error) {
+        if (metaQ.error.status === 410) {
+            router.replace("/expired-locker");
+            return null;
+        }
+        return (
+            <div className="max-w-2xl mx-auto mt-12 md:border p-6 md:rounded-lg md:shadow-sm">
+                <div className="mb-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                    {metaQ.error.message || "Failed to load locker."}
+                </div>
+            </div>
+        );
+    }
+
+    const { title, requiresPassword, views } = metaQ.data || {};
 
     const handleCopy = async () => {
         try {
@@ -79,48 +92,20 @@ export default function ViewLockerPage() {
         }
     };
 
-    const handleUnlock = async (e) => {
+    const handleUnlock = (e) => {
         e.preventDefault();
-        setError("");
-        setUnlocking(true);
-        try {
-            const { destinationUrl } = await unlockLocker(shortCode, password);
-            setDestinationUrl(destinationUrl);
-            setViews((v) => v + 1);
-        } catch (e) {
-            if (e.status === 410) {
-                router.replace("/expired-locker");
-                return;
-            }
-            setError(e.message || "Invalid password");
-        } finally {
-            setUnlocking(false);
-        }
+        unlockM.mutate(password);
     };
 
-    if (loading) {
-        return (
-            <div className="p-6">
-                <LockerSkeleton count={1} className="max-w-lg mx-auto" />
-            </div>
-        );
-    }
-
-    // content
     return (
         <div className="max-w-2xl mx-auto mt-12 md:border p-6 md:rounded-lg md:shadow-sm">
             <h1 className="text-2xl text-center mb-2 font-bold font-heading text-dark_grey">
                 {title || "Shared Link"}
             </h1>
 
-            {error && (
-                <div className="mb-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-                    {error}
-                </div>
-            )}
             <div className="flex items-center justify-center gap-2 text-sm pb-2">
                 <EyeIcon className="w-4 h-4" aria-hidden="true" />
-                <span>Views: {views}</span>
+                <span>Views: {views ?? 0}</span>
             </div>
 
             <div className="flex items-center justify-center gap-2 text-sm mb-6">
@@ -129,7 +114,7 @@ export default function ViewLockerPage() {
             </div>
 
             <div className="bg-[#f7f7f7] p-4 rounded-md border border-light_grey border-dashed">
-                {requiresPassword && !destinationUrl && (
+                {requiresPassword && !destinationUrl ? (
                     <>
                         <div className="flex items-center gap-2 mb-4">
                             <LockClosedIcon className="w-5 h-5 text-primary_blue" />
@@ -142,23 +127,30 @@ export default function ViewLockerPage() {
                                 <input
                                     type="password"
                                     value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    placeholder="••••••••"
+                                    onChange={(e) => {
+                                        if (unlockM.isError) unlockM.reset();
+                                        setPassword(e.target.value);
+                                    }}
+                                    aria-invalid={unlockM.isError ? "true" : "false"}
+                                    aria-describedby={unlockM.isError ? "pwd-error" : undefined}
                                     className="w-full rounded-md border border-light_grey px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary_blue"
                                 />
-                                {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+                                {unlockM.isError && (
+                                    <p id="pwd-error" className="mt-1 text-sm text-red-600">
+                                        {unlockM.error?.message || "Invalid password"}
+                                    </p>
+                                )}
                             </div>
 
                             <button
                                 type="submit"
-                                disabled={unlocking || !password}
+                                disabled={unlockM.isPending || !password}
                                 className="primary w-full py-2 rounded-md">
-                                {unlocking ? "Unlocking..." : "Unlock"}
+                                {unlockM.isPending ? "Unlocking..." : "Unlock"}
                             </button>
                         </form>
                     </>
-                )}
-                {destinationUrl && (
+                ) : destinationUrl ? (
                     <>
                         <div className="flex items-center gap-2 mb-4">
                             <LockOpenIcon className="w-5 h-5 text-primary_blue" />
@@ -184,7 +176,7 @@ export default function ViewLockerPage() {
                             Open Link
                         </a>
                     </>
-                )}
+                ) : null}
             </div>
         </div>
     );
