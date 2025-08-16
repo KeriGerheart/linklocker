@@ -1,11 +1,13 @@
 require("dotenv").config();
 const express = require("express");
-const app = express();
 const cors = require("cors");
 const mongoose = require("mongoose");
 
+const app = express();
+
+const allowed = [process.env.FRONTEND_ORIGIN];
+app.use(cors({ origin: allowed, credentials: true }));
 app.use(express.json());
-app.use(cors());
 
 mongoose
     .connect(process.env.MONGODB_URI)
@@ -19,4 +21,7 @@ app.use("/api/lockers", lockerRoutes);
 app.use("/api/view", viewRoutes);
 
 app.get("/", (req, res) => res.send("API is running"));
-app.listen(3001, () => console.log("Server running on port 3001"));
+
+// Render sets PORT for you
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
