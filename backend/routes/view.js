@@ -1,10 +1,9 @@
-// routes/view.js
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const Locker = require("../models/Locker");
 const router = express.Router();
 
-// GET /api/view/:shortCode
+// view locker
 router.get("/:shortCode", async (req, res) => {
     console.log("[VIEW GET] url:", req.originalUrl);
     console.log("[VIEW GET] params:", req.params);
@@ -31,7 +30,7 @@ router.get("/:shortCode", async (req, res) => {
     }
 });
 
-// POST /api/view/:shortCode/unlock
+// unlock locker
 router.post("/:shortCode/unlock", async (req, res) => {
     console.log("[UNLOCK POST] url:", req.originalUrl);
     console.log("[UNLOCK POST] params:", req.params);
