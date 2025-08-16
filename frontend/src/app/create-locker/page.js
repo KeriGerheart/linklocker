@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { Switch } from "@headlessui/react";
-import { useQueryClient, useQuery } from "@tanstack/react-query";
+import { useQueryClient, useQuery, useMutation, QueryClient } from "@tanstack/react-query";
 import { createLocker, getUserLockers, updateLocker } from "@/lib/api";
 
 export default function CreateLockerPage() {
@@ -21,7 +21,6 @@ export default function CreateLockerPage() {
     const [passwordEnabled, setPasswordEnabled] = useState(false);
     const [password, setPassword] = useState("");
     const [expirationDays, setExpirationDays] = useState("1");
-    const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState("");
 
     const { data: lockers = [], isLoading: lockersLoading } = useQuery({
@@ -43,15 +42,71 @@ export default function CreateLockerPage() {
         setPasswordEnabled(!!lockerFromCache.passwordHash);
     }, [lockerFromCache]);
 
-    if (isEdit && lockersLoading && !lockerFromCache) {
-        return (
-            <div className="max-w-2xl mx-auto mt-8 md:border p-6 md:rounded-lg md:shadow-sm">
-                <p>Loading locker…</p>
-            </div>
-        );
-    }
+    const createMutation = useMutation({
+        mutationFn: (payload) => createLocker(payload),
 
-    const handleSubmit = async (e) => {
+        onMutate: async (payload) => {
+            setError("");
+            await queryClient.cancelQueries({ queryKey: ["lockers", user?.id] });
+
+            const previous = queryClient.getQueryData(["lockers", user?.id]) || [];
+
+            const tempShort = `temp-${Math.random().toString(36).slice(2, 8)}`;
+            const tempLocker = {
+                _id: tempShort,
+                title: payload.title,
+                destinationUrl: payload.destinationUrl,
+                shortCode: tempShort,
+                views: 0,
+                passwordHash: payload.password ? "set" : undefined,
+                expirationDate: new Date(
+                    Date.now() + Number(payload.expirationDays) * 24 * 60 * 60 * 1000
+                ).toISOString(),
+                ownerId: user?.id,
+            };
+
+            queryClient.setQueryData(["lockers", user?.id], [tempLocker, ...previous]);
+            return { previous, tempShort };
+        },
+
+        onError: (err, _payload, ctx) => {
+            if (ctx?.previous) queryClient.setQueryData(["lockers", user?.id], ctx.previous);
+            setError(err?.message || "Failed to create locker.");
+        },
+
+        onSuccess: (data, payload, ctx) => {
+            const real = {
+                ...data.locker,
+                title: payload.title,
+                destinationUrl: payload.destinationUrl,
+                views: 0,
+                passwordHash: payload.password ? "set" : undefined,
+                ownerId: user?.id,
+            };
+
+            queryClient.setQueryData(["lockers", user?.id], (old = []) => {
+                return [real, ...old.filter((l) => l.shortCode !== ctx?.tempShort)];
+            });
+
+            const shortCode = data?.locker?.shortCode;
+            router.push(`/locker-created?code=${encodeURIComponent(shortCode)}`);
+        },
+
+        onSettled: () => {
+            queryClient.invalidateQueries({ queryKey: ["lockers", user?.id] });
+        },
+    });
+
+    const editMutation = useMutation({
+        mutationFn: ({ shortCode, updates }) => updateLocker(shortCode, updates),
+        onError: (err) => setError(err?.message || "Failed to update locker."),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["lockers", user?.id] });
+            router.push("/dashboard");
+        },
+    });
+
+    const handleSubmit = (e) => {
         e.preventDefault();
         setError("");
 
@@ -64,43 +119,37 @@ export default function CreateLockerPage() {
             return;
         }
 
-        setSubmitting(true);
-        try {
-            if (isEdit) {
-                const updates = {
-                    title,
-                    destinationUrl,
-                    expirationDays: Number(expirationDays),
-                };
-
-                if (passwordEnabled && password.trim()) {
-                    updates.password = password.trim();
-                }
-                await updateLocker(editShortCode, updates);
-
-                await queryClient.invalidateQueries({ queryKey: ["lockers", user.id] });
-                router.push("/dashboard");
-            } else {
-                const payload = {
-                    title,
-                    destinationUrl,
-                    password: passwordEnabled ? password : "",
-                    expirationDays: Number(expirationDays),
-                    ownerId: user.id,
-                };
-
-                const data = await createLocker(payload);
-                const shortCode = data?.locker?.shortCode;
+        if (isEdit) {
+            const updates = {
+                title,
+                destinationUrl,
+                expirationDays: Number(expirationDays),
+            };
+            if (passwordEnabled && password.trim()) {
+                updates.password = password.trim();
             }
-
-            await queryClient.invalidateQueries({ queryKey: ["lockers", user.id] });
-            router.push(`/locker-created?code=${encodeURIComponent(shortCode)}`);
-        } catch (err) {
-            setError(err.message || (isEdit ? "Failed to update locker." : "Failed to create locker."));
-        } finally {
-            setSubmitting(false);
+            editMutation.mutate({ shortCode: editShortCode, updates });
+        } else {
+            const payload = {
+                title,
+                destinationUrl,
+                password: passwordEnabled ? password : "",
+                expirationDays: Number(expirationDays),
+                ownerId: user.id,
+            };
+            createMutation.mutate(payload);
         }
     };
+
+    const isSubmitting = createMutation.isPending || editMutation.isPending;
+
+    if (isEdit && lockersLoading && !lockerFromCache) {
+        return (
+            <div className="max-w-2xl mx-auto mt-8 md:border p-6 md:rounded-lg md:shadow-sm">
+                <p>Loading locker…</p>
+            </div>
+        );
+    }
 
     return (
         <div className="max-w-2xl mx-auto mt-8 md:border p-6 md:rounded-lg md:shadow-sm">
@@ -193,9 +242,9 @@ export default function CreateLockerPage() {
                 <div className="pt-4">
                     <button
                         type="submit"
-                        disabled={submitting || !user?.id}
+                        disabled={isSubmitting || !user?.id}
                         className="primary w-full py-2 text-center rounded-md disabled:opacity-60">
-                        {submitting
+                        {isSubmitting
                             ? isEdit
                                 ? "Saving..."
                                 : "Creating..."
