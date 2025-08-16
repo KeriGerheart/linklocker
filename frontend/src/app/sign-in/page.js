@@ -20,6 +20,7 @@ export default function SignInPage() {
                         formButtonPrimary: "primary-button w-full justify-center mt-4 font-heading font-bold",
                         socialButtonsBlockButton: "border border-gray-300 rounded-md hover:bg-gray-50",
                         footerActionLink: "text-primary_blue hover:text-secondary_blue",
+                        footer: "hidden",
                     },
                     variables: {
                         colorPrimary: "#5068E2",
